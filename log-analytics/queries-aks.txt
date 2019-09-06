@@ -1,0 +1,26 @@
+//Example Azure Kubernetes Service queries from AKS 'Insights'
+
+let startDateTime = datetime('2019-09-05T18:00:00.000Z');
+let endDateTime = datetime('2019-09-06T00:06:40.560Z');
+let ContainerIdList = KubePodInventory
+| where TimeGenerated >= startDateTime and TimeGenerated < endDateTime
+| where ContainerName =~ '675cb4de-d039-11e9-aa62-e6fa40574865/azure-vote-front'
+| where ClusterId =~ '/subscriptions/5fe6c3ef-32e2-4e37-8164-1314c0fb93d8/resourceGroups/akslab-rg/providers/Microsoft.ContainerService/managedClusters/akslab-01'
+| distinct ContainerID; ContainerLog
+| where TimeGenerated >= startDateTime and TimeGenerated < endDateTime
+| where ContainerID in (ContainerIdList)
+| project LogEntrySource, LogEntry, TimeGenerated, Computer, Image, Name, ContainerID
+| order by TimeGenerated desc
+| render table
+
+
+
+let startTimestamp = ago(1d);
+let ContainerIDs = KubePodInventory
+| where TimeGenerated > startTimestamp
+| where ClusterId =~ "/subscriptions/5fe6c3ef-32e2-4e37-8164-1314c0fb93d8/resourceGroups/akslab-rg/providers/Microsoft.ContainerService/managedClusters/akslab-01"
+| distinct ContainerID; ContainerLog
+| where ContainerID in (ContainerIDs)
+| project LogEntrySource, LogEntry, TimeGenerated, Computer, Image, Name, ContainerID
+| order by TimeGenerated desc
+| limit 200
